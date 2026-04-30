@@ -1,0 +1,30 @@
+### Register a new user
+POST http://localhost:8080/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "John Doe",
+  "phoneNumber": "254799879999",
+  "password": "mySecurePassword123"
+}
+
+### Register a fresh user
+POST http://localhost:8080/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "Test User",
+  "phoneNumber": "254700111222",
+  "email": "test@chamaledger.com",
+  "nationalId": "12345678",
+  "password": "password123"
+}
+
+### Login with the fresh user
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "phoneNumber": "254700111222",
+  "password": "password123"
+}
