@@ -22,23 +22,23 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for stateless REST APIs
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(req -> req
-                        // Whitelist these specific routes so anyone can access them without a token
-                        .requestMatchers("/api/v1/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/error").permitAll()
-                        // All other requests require a valid JWT token
-                        .anyRequest().authenticated()
+                        .requestMatchers(
+                                "/api/v1/auth/**",       // Registration & Login
+                                "/api/v1/mpesa/**",      // STK Push & Callback
+                                "/swagger-ui/**",        // Documentation
+                                "/swagger-ui.html",      // Documentation
+                                "/v3/api-docs/**",       // API Specs
+                                "/error"
+                        ).permitAll()
+                        .anyRequest().authenticated()     // Everything else needs a JWT
                 )
-                // Make the session stateless (Spring shouldn't remember users between requests)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
-                // Add our custom JWT filter BEFORE the standard Spring password filter
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
-    }
-    @Bean
-    public org.springframework.security.authentication.AuthenticationManager authenticationManager(org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
     }
 }

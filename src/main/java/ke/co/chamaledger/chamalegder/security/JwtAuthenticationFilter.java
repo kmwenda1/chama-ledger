@@ -30,11 +30,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
+        // Skip filtering for the M-Pesa callback specifically if you want to be extra safe
+        if (request.getServletPath().contains("/api/v1/mpesa")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String userPhoneNumber;
 
-        // 1. Check if the Authorization header is missing or doesn't start with "Bearer "
+        // 1. If header is missing or not Bearer, move to the next filter (SecurityConfig permitAll)
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -44,23 +50,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         jwt = authHeader.substring(7);
         userPhoneNumber = jwtService.extractUsername(jwt);
 
-        // 3. If we have a phone number and the user isn't already authenticated in this session
+        // 3. Authenticate if token exists and user is not yet authenticated
         if (userPhoneNumber != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userPhoneNumber);
 
             // 4. Validate the token
             if (jwtService.isTokenValid(jwt, userDetails)) {
-                // 5. Tell Spring Security that this user is officially logged in for this specific request
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,
                         userDetails.getAuthorities()
                 );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                // 5. Set authentication in the context
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
 
+        // Continue the filter chain
         filterChain.doFilter(request, response);
     }
 }

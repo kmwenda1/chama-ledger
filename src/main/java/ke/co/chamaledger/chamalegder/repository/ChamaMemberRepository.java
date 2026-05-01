@@ -11,12 +11,14 @@ import java.util.UUID;
 @Repository
 public interface ChamaMemberRepository extends JpaRepository<ChamaMember, UUID> {
 
-    // Get all members in a specific chama
     List<ChamaMember> findByChama_Id(UUID chamaId);
 
-    // Get all chamas a specific user belongs to
     List<ChamaMember> findByUser_Id(UUID userId);
 
-    // Find a specific member's record in a specific chama
     Optional<ChamaMember> findByChama_IdAndUser_Id(UUID chamaId, UUID userId);
+
+    // NEW: Find member by the phone number attached to the User entity
+    // We use First because a user might be in multiple chamas;
+    // for now, we find the first active one.
+    Optional<ChamaMember> findFirstByUser_PhoneNumberAndIsActiveTrue(String phoneNumber);
 }
