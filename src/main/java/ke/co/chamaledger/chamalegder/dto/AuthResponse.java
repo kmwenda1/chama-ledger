@@ -15,4 +15,5 @@ public class AuthResponse {
     private String message;
     private String fullName;
     private String phoneNumber;
+    private String role; // MEMBER, TREASURER, MANAGER
 }

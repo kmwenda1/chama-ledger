@@ -20,14 +20,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final ChamaMemberRepository chamaMemberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final ChamaMemberRepository chamaMemberRepository;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        // 1. Validation Checks
         if (userRepository.existsByPhoneNumber(request.getPhoneNumber())) {
             throw new RuntimeException("Phone number already registered");
         }
@@ -35,7 +34,6 @@ public class AuthService {
             throw new RuntimeException("Email already registered");
         }
 
-        // 2. Create and save the User
         User user = User.builder()
                 .fullName(request.getFullName())
                 .phoneNumber(request.getPhoneNumber())
@@ -47,16 +45,6 @@ public class AuthService {
                 .build();
 
         User savedUser = userRepository.save(user);
-
-        // 3. Create the ChamaMember Profile (Required for M-Pesa Ledger Loop)
-        ChamaMember member = ChamaMember.builder()
-                .user(savedUser)
-                .role("MEMBER")
-                .isActive(true)
-                .build();
-        chamaMemberRepository.save(member);
-
-        // 4. Generate Token
         String jwtToken = jwtService.generateToken(savedUser);
 
         return AuthResponse.builder()
@@ -64,6 +52,7 @@ public class AuthService {
                 .message("User registered successfully")
                 .fullName(savedUser.getFullName())
                 .phoneNumber(savedUser.getPhoneNumber())
+                .role("MEMBER")
                 .build();
     }
 
@@ -79,12 +68,29 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         String jwtToken = jwtService.generateToken(user);
+        String role = resolveRole(request.getPhoneNumber());
 
         return AuthResponse.builder()
                 .token(jwtToken)
                 .message("Login successful")
                 .fullName(user.getFullName())
                 .phoneNumber(user.getPhoneNumber())
+                .role(role)
                 .build();
+    }
+
+    private String resolveRole(String phone) {
+        return chamaMemberRepository.findFirstByUser_PhoneNumberAndIsActiveTrue(phone)
+                .map(m -> mapChamaRole(m.getRole()))
+                .orElse("MEMBER");
+    }
+
+    private String mapChamaRole(String chamaRole) {
+        if (chamaRole == null) return "MEMBER";
+        return switch (chamaRole.toUpperCase()) {
+            case "CHAIRPERSON", "ADMIN" -> "MANAGER";
+            case "TREASURER" -> "TREASURER";
+            default -> "MEMBER";
+        };
     }
 }
