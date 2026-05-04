@@ -12,26 +12,24 @@ import java.util.UUID;
 @Repository
 public interface ChamaMemberRepository extends JpaRepository<ChamaMember, UUID> {
 
-    // 1. Used by LoanService to find a specific active member by Chama ID and Phone
+    // FIX FOR ERROR 1: Used by DataInitializer.java (Line 104)
+    Optional<ChamaMember> findByChama_IdAndUser_Id(UUID chamaId, UUID userId);
+
+    // FIX FOR ERRORS 2, 3, & 4: Used by MeetingService.java
+    // The service expects a List, so we change the return type from Optional to List
+    List<ChamaMember> findByUser_PhoneNumberAndIsActiveTrue(String phoneNumber);
+
+    // Used by LoanService
     Optional<ChamaMember> findFirstByChama_IdAndUser_PhoneNumberAndIsActiveTrue(UUID chamaId, String phoneNumber);
 
-    // 2. Used by LoanService / MeetingService to find an active member globally by phone
-    Optional<ChamaMember> findFirstByUser_PhoneNumberAndIsActiveTrue(String phoneNumber);
-
-    Optional<ChamaMember> findByUser_PhoneNumberAndIsActiveTrue(String phoneNumber);
-
-    // 3. Used by ReportService to get members with user details
-    // We use @Query to ensure "WithUsers" logic is explicit (Active members)
+    // Used by ReportService
     @Query("SELECT cm FROM ChamaMember cm JOIN FETCH cm.user WHERE cm.isActive = true")
     List<ChamaMember> findActiveMembersWithUsers();
 
-    // 4. Used by ReportService to filter active members by specific roles (e.g., 'CHAIRMAN', 'TREASURER')
     @Query("SELECT cm FROM ChamaMember cm WHERE cm.isActive = true AND cm.role IN :roles")
     List<ChamaMember> findActiveMembersByRoles(List<String> roles);
 
-    // Standard lookup by Chama
     List<ChamaMember> findByChama_Id(UUID chamaId);
 
-    // Standard lookup by User
     List<ChamaMember> findByUser_Id(UUID userId);
 }
