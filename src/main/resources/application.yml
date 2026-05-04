@@ -3,9 +3,11 @@ spring:
     name: chamaledger
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/chamaledger_db
-    username: postgres
-    password: 1234
+    # This uses the Render URL if available, otherwise defaults to local
+    # Added ?sslmode=require to fix the "requir" typo error
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/chamaledger_db?sslmode=require}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:1234}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -15,23 +17,23 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        # Dialect is optional in Hibernate 6+, but kept for clarity
 
   flyway:
     enabled: false
     baseline-on-migrate: true
 
 jwt:
-  secret: MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNA==
+  secret: ${JWT_SECRET:MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNA==}
   expiration: 86400000
 
 # Third Party Integrations
 app:
   africas-talking:
-    api-key: atsk_600e813c50731a42498fe90714d9cfc869a79cd4d007eb9abee9ae69db3365ea36f18e01
-    username: sandbox
+    api-key: ${AT_API_KEY:atsk_600e813c50731a42498fe90714d9cfc869a79cd4d007eb9abee9ae69db3365ea36f18e01}
+    username: ${AT_USERNAME:sandbox}
   gemini:
-    api-key: AIzaSyAtv8zB9t3syX8wW5RmUGxo1hIkdKTnKrw
+    api-key: ${GEMINI_API_KEY:AIzaSyAtv8zB9t3syX8wW5RmUGxo1hIkdKTnKrw}
 
 # M-Pesa Daraja API Configuration
 mpesa:
@@ -43,4 +45,4 @@ mpesa:
   stk-query-url: https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query
   shortcode: "174379"
   passkey: "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
-  callback-url: https://contemptuously-uninterpretable-henley.ngrok-free.dev/api/v1/mpesa/callback
+  callback-url: ${MPESA_CALLBACK_URL:https://contemptuously-uninterpretable-henley.ngrok-free.dev/api/v1/mpesa/callback}

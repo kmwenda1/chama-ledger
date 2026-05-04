@@ -46,7 +46,10 @@ export interface MpesaLog {
   createdAt: string;
 }
 
-const API_BASE = 'http://localhost:8080/api/v1';
+// Next.js Environment Variable Logic
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL
+    ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1`
+    : 'http://localhost:8080/api/v1';
 
 export const useDashboardData = () => {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -63,12 +66,15 @@ export const useDashboardData = () => {
           ...getAuthHeader(),
         },
       });
+
       if (response.status === 401 || response.status === 403) {
         logout();
         router.push('/login');
         return;
       }
+
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
       const result = await response.json();
       setData(result);
       setError(null);
