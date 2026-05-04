@@ -22,6 +22,7 @@ public class SmsService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     public void sendSms(String phoneNumber, String message) {
+        String normalizedPhone = normalizeForAfricasTalking(phoneNumber);
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.set("apikey", apiKey);
@@ -30,7 +31,7 @@ public class SmsService {
 
             MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
             body.add("username", username);
-            body.add("to", phoneNumber);
+            body.add("to", normalizedPhone);
             body.add("message", message);
             // body.add("from", "CHAMA_LDGR"); // Uncomment once you register a Sender ID
 
@@ -39,12 +40,23 @@ public class SmsService {
             ResponseEntity<String> response = restTemplate.postForEntity(AT_URL, request, String.class);
 
             if (response.getStatusCode().is2xxSuccessful()) {
-                log.info("SMS sent successfully to {}", phoneNumber);
+                log.info("SMS API accepted for {}. Response: {}", normalizedPhone, response.getBody());
             } else {
-                log.error("Failed to send SMS to {}. Status: {}", phoneNumber, response.getStatusCode());
+                log.error("Failed to send SMS to {}. Status: {} Response: {}", normalizedPhone, response.getStatusCode(), response.getBody());
             }
         } catch (Exception e) {
-            log.error("Error calling Africa's Talking API: {}", e.getMessage());
+            log.error("Error calling Africa's Talking API for {}: {}", normalizedPhone, e.getMessage(), e);
         }
+    }
+
+    private String normalizeForAfricasTalking(String phoneNumber) {
+        if (phoneNumber == null) return "";
+        String trimmed = phoneNumber.trim();
+        if (trimmed.startsWith("+")) return trimmed;
+
+        String digits = trimmed.replaceAll("\\s+", "");
+        if (digits.startsWith("254")) return "+" + digits;
+
+        return digits;
     }
 }

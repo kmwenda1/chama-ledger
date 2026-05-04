@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/v1/mpesa")
 @RequiredArgsConstructor
@@ -32,13 +34,16 @@ public class MpesaController {
      * Webhook called by Safaricom Daraja API after the user enters their PIN.
      */
     @PostMapping("/callback")
-    public ResponseEntity<String> receiveMpesaCallback(@RequestBody String jsonResponse) {
-        log.info("Incoming M-Pesa Callback...");
+    public ResponseEntity<Map<String, Object>> receiveMpesaCallback(@RequestBody String jsonResponse) {
+        System.out.println("[CALLBACK DEBUG] M-Pesa callback endpoint was hit.");
 
         // Process and save to database
         mpesaService.processCallback(jsonResponse);
 
         // Return 200 OK so Safaricom knows we got the message
-        return ResponseEntity.ok("Success");
+        return ResponseEntity.ok(Map.of(
+                "ResultCode", 0,
+                "ResultDesc", "Success"
+        ));
     }
 }

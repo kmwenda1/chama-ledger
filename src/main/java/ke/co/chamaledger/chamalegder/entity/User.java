@@ -41,9 +41,11 @@ public class User implements UserDetails { // <-- This is the magic addition
     private String passwordHash;
 
     @Column(name = "is_phone_verified")
+    @Builder.Default
     private Boolean isPhoneVerified = false;
 
     @Column(name = "is_active")
+    @Builder.Default
     private Boolean isActive = true;
 
     @Column(name = "profile_photo_url", length = 500)
@@ -92,6 +94,6 @@ public class User implements UserDetails { // <-- This is the magic addition
 
     @Override
     public boolean isEnabled() {
-        return isActive;
+        return Boolean.TRUE.equals(isActive);
     }
 }

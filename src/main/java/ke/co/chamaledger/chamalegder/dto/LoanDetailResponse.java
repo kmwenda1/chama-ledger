@@ -20,6 +20,7 @@ public class LoanDetailResponse {
     private BigDecimal monthlyRepayment;
     private LoanStatus status;
     private String purpose;
+    private String reviewNotes;
     private String borrowerName;
     private String borrowerPhoneNumber;
     private LocalDateTime createdAt;

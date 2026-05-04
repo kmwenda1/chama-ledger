@@ -12,6 +12,7 @@ public class MpesaConfig {
     private String consumerSecret;
     private String authUrl;
     private String stkPushUrl;
+    private String stkQueryUrl;
     private String shortcode;
     private String passkey;
     private String callbackUrl;

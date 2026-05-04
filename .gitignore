@@ -1,9 +1,7 @@
+node_modules/
+frontend/node_modules/
 target/
 *.class
 *.jar
-*.war
-*.ear
 .idea/
-*.iml
 .env
-*.log

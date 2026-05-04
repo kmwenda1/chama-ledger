@@ -51,6 +51,9 @@ public class Loan {
     @Column(columnDefinition = "TEXT")
     private String purpose;
 
+    @Column(name = "review_notes", columnDefinition = "TEXT")
+    private String reviewNotes;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

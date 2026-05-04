@@ -1,7 +1,6 @@
 package ke.co.chamaledger.chamalegder.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import ke.co.chamaledger.chamalegder.domain.Meeting;
 import ke.co.chamaledger.chamalegder.dto.MeetingResponse;
 import ke.co.chamaledger.chamalegder.dto.MeetingUploadRequest;
@@ -9,30 +8,18 @@ import ke.co.chamaledger.chamalegder.entity.ChamaMember;
 import ke.co.chamaledger.chamalegder.repository.ChamaMemberRepository;
 import ke.co.chamaledger.chamalegder.repository.MeetingRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class MeetingService {
 
-    private static final String GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
-    private static final String SECRETARY_PROMPT = "Act as a Chama Secretary. Extract the summary, decisions, and action items from these notes in JSON format.";
-
     private final MeetingRepository meetingRepository;
     private final ChamaMemberRepository chamaMemberRepository;
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
-
-    @Value("${app.gemini.api-key:}")
-    private String geminiApiKey;
+    private final GeminiAiService geminiAiService;
 
     @Transactional
     public MeetingResponse uploadMeetingNotes(String phone, MeetingUploadRequest request) {
@@ -55,44 +42,7 @@ public class MeetingService {
     }
 
     public JsonNode processMeetingWithGemini(String rawContent) {
-        if (geminiApiKey == null || geminiApiKey.isBlank()) {
-            throw new RuntimeException("Gemini API key is not configured");
-        }
-
-        String prompt = SECRETARY_PROMPT + "\nReturn only valid JSON with keys: summary, decisions, actionItems.\n\nNotes:\n" + rawContent;
-        Map<String, Object> body = Map.of(
-                "contents", List.of(Map.of(
-                        "parts", List.of(Map.of("text", prompt))
-                )),
-                "generationConfig", Map.of("responseMimeType", "application/json")
-        );
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-
-        String url = UriComponentsBuilder.fromHttpUrl(GEMINI_URL)
-                .queryParam("key", geminiApiKey)
-                .toUriString();
-
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, request, JsonNode.class);
-        JsonNode textNode = response.getBody()
-                .path("candidates")
-                .path(0)
-                .path("content")
-                .path("parts")
-                .path(0)
-                .path("text");
-
-        if (textNode.isMissingNode() || textNode.asText().isBlank()) {
-            throw new RuntimeException("Gemini returned an empty meeting analysis");
-        }
-
-        try {
-            return objectMapper.readTree(textNode.asText());
-        } catch (Exception e) {
-            throw new RuntimeException("Gemini returned invalid JSON", e);
-        }
+        return geminiAiService.analyzeMeetingNotes(rawContent);
     }
 
     private boolean canUploadMeetingNotes(String phone) {

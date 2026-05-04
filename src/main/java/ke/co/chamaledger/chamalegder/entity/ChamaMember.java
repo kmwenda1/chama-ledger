@@ -30,12 +30,13 @@ public class ChamaMember {
     private User user;
 
     @Column(nullable = false, length = 20)
-    private String role; // Values will be: TREASURER, SECRETARY, or MEMBER
+    private String role; // Values: CHAIRPERSON, TREASURER, SECRETARY, or MEMBER
 
     @CreationTimestamp
     @Column(name = "joined_at", updatable = false)
     private LocalDateTime joinedAt;
 
     @Column(name = "is_active")
+    @Builder.Default
     private Boolean isActive = true;
 }

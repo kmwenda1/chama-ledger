@@ -29,6 +29,7 @@ public class OtpCode {
     private String purpose; // Values will be: REGISTER, LOGIN, or RESET
 
     @Column(name = "is_used")
+    @Builder.Default
     private Boolean isUsed = false;
 
     @Column(name = "expires_at", nullable = false)

@@ -43,6 +43,7 @@ public class Chama {
     private Integer contributionDay;
 
     @Column(name = "meeting_frequency", nullable = false, length = 20)
+    @Builder.Default
     private String meetingFrequency = "MONTHLY";
 
     @Column(name = "loan_interest_rate", nullable = false, precision = 5, scale = 2)
@@ -52,6 +53,7 @@ public class Chama {
     private BigDecimal maxLoanMultiplier;
 
     @Column(name = "is_active")
+    @Builder.Default
     private Boolean isActive = true;
 
     // This creates the foreign key relationship to the User table!

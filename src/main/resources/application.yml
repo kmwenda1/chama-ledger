@@ -25,11 +25,13 @@ jwt:
   secret: MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNA==
   expiration: 86400000
 
-# Africa's Talking Configuration
+# Third Party Integrations
 app:
   africas-talking:
     api-key: atsk_600e813c50731a42498fe90714d9cfc869a79cd4d007eb9abee9ae69db3365ea36f18e01
     username: sandbox
+  gemini:
+    api-key: AIzaSyAtv8zB9t3syX8wW5RmUGxo1hIkdKTnKrw
 
 # M-Pesa Daraja API Configuration
 mpesa:

@@ -3,6 +3,7 @@ package ke.co.chamaledger.chamalegder.controller;
 import jakarta.validation.Valid;
 import ke.co.chamaledger.chamalegder.dto.LoanApplicationRequest;
 import ke.co.chamaledger.chamalegder.dto.LoanDetailResponse;
+import ke.co.chamaledger.chamalegder.dto.LoanReviewRequest;
 import ke.co.chamaledger.chamalegder.service.LoanService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/loans")
@@ -29,5 +31,14 @@ public class LoanController {
     @GetMapping("/my")
     public ResponseEntity<List<LoanDetailResponse>> getMyLoans(Authentication authentication) {
         return ResponseEntity.ok(loanService.getMyLoans(authentication.getName()));
+    }
+
+    @PatchMapping("/{loanId}/review")
+    public ResponseEntity<LoanDetailResponse> reviewLoan(
+            @PathVariable UUID loanId,
+            @Valid @RequestBody LoanReviewRequest request,
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(loanService.reviewLoan(loanId, request, authentication.getName()));
     }
 }

@@ -17,7 +17,6 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    // Pulls the secret and expiration time from our application.yml file
     @Value("${jwt.secret}")
     private String secretKey;
 
@@ -40,7 +39,7 @@ public class JwtService {
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         return Jwts.builder()
                 .claims(extraClaims)
-                .subject(userDetails.getUsername()) // This is the phone number
+                .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(getSignInKey(), Jwts.SIG.HS256)
