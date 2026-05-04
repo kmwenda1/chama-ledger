@@ -1,23 +1,21 @@
-# Stage 1: Build the JAR
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+# Stage 1: Build the JAR with forced Java 21 targeting
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 
-# Copy ONLY the files needed for the Maven build
+# Copy the pom first to cache dependencies
 COPY pom.xml .
 COPY src ./src
 
-# Build the application
-RUN mvn clean package -DskipTests
+# The -Dmaven.compiler.release=21 flag is the "magic" fix here
+RUN mvn clean package -DskipTests -Dmaven.compiler.release=21
 
-# Stage 2: Run the JAR
-FROM eclipse-temurin:21-jdk-jammy
+# Stage 2: Runtime
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
-# Copy the JAR from the build stage
+# Copy the generated JAR from the build stage
 COPY --from=build /app/target/*.jar app.jar
 
-# Expose the default Spring Boot port
 EXPOSE 8080
 
-# Run the app
 ENTRYPOINT ["java", "-jar", "app.jar"]
