@@ -10,7 +10,7 @@ import {
   Shield, Clock, Banknote, Loader2, Lock,
 } from "lucide-react";
 
-const API_BASE = "http://localhost:8080/api/v1";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL + "/api/v1";
 
 // ────── Trust Score Gauge ──────
 function TrustScoreGauge({ score }: { score: number }) {
@@ -278,7 +278,7 @@ export default function Dashboard() {
     if (!user) return;
     setContributing(true);
     try {
-      const res = await fetch("http://localhost:8080/api/v1/payments/stk-push", {
+      const res = await fetch(`${API_BASE}/payments/stk-push`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
