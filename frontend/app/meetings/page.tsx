@@ -46,7 +46,7 @@ export default function MeetingsPage() {
                 body: JSON.stringify({
                     rawContent: chatText,
                     title: "Meeting " + new Date().toLocaleDateString(),
-                    meetingDate: new Date().toISOString().split("T")[0],
+                    meetingDate: new Date().toISOString().replace("Z", ""),
                 }),
             });
 
@@ -64,8 +64,6 @@ export default function MeetingsPage() {
         }
     };
 
-    // Helper to safely render decisions/actionItems whether they are
-    // a JsonNode array, a plain JS array, or a string
     const renderList = (data: any, color: "emerald" | "blue") => {
         let items: string[] = [];
 
@@ -78,21 +76,24 @@ export default function MeetingsPage() {
         } else if (typeof data === "string") {
             items = data.split("\n").filter(Boolean);
         } else if (typeof data === "object") {
-            // JsonNode serialized as object
             items = Object.values(data).map((v: any) =>
                 typeof v === "string" ? v : JSON.stringify(v)
             );
         }
 
-        const bg = color === "emerald" ? "bg-emerald-500/20 text-emerald-400" : "bg-blue-500/20 text-blue-400";
-        const border = color === "emerald" ? "border-emerald-500/20" : "border-blue-500/20";
+        const bg =
+            color === "emerald"
+                ? "bg-emerald-500/20 text-emerald-400"
+                : "bg-blue-500/20 text-blue-400";
 
         if (items.length === 0) {
             return (
                 <div className="text-center py-10 text-slate-500 border-2 border-dashed border-white/5 rounded-xl">
-                    {color === "emerald"
-                        ? <CheckSquare size={28} className="mx-auto mb-3 opacity-30" />
-                        : <FileText size={28} className="mx-auto mb-3 opacity-30" />}
+                    {color === "emerald" ? (
+                        <CheckSquare size={28} className="mx-auto mb-3 opacity-30" />
+                    ) : (
+                        <FileText size={28} className="mx-auto mb-3 opacity-30" />
+                    )}
                     Nothing found in this chat.
                 </div>
             );
@@ -101,8 +102,13 @@ export default function MeetingsPage() {
         return (
             <ul className="space-y-3">
                 {items.map((item, i) => (
-                    <li key={i} className="flex items-start gap-3 p-3 bg-white/[0.03] rounded-xl border border-white/5">
-            <span className={`shrink-0 w-5 h-5 rounded-full ${bg} text-[10px] font-bold flex items-center justify-center mt-0.5`}>
+                    <li
+                        key={i}
+                        className="flex items-start gap-3 p-3 bg-white/[0.03] rounded-xl border border-white/5"
+                    >
+            <span
+                className={`shrink-0 w-5 h-5 rounded-full ${bg} text-[10px] font-bold flex items-center justify-center mt-0.5`}
+            >
               {i + 1}
             </span>
                         <p className="text-sm text-slate-300 leading-relaxed">{item}</p>
@@ -114,7 +120,6 @@ export default function MeetingsPage() {
 
     return (
         <div className="min-h-screen bg-background text-slate-50 flex">
-            {/* Background glows */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/8 blur-[120px]" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/5 blur-[120px]" />
@@ -123,7 +128,6 @@ export default function MeetingsPage() {
             <Sidebar />
 
             <main className="relative z-10 flex-1 p-6 lg:p-10 overflow-y-auto">
-                {/* Header */}
                 <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 animate-fade-up">
                     <div>
                         <div className="flex items-center gap-3 mb-1">
@@ -141,7 +145,6 @@ export default function MeetingsPage() {
                     </div>
                 </header>
 
-                {/* Input Card */}
                 <section className="glass rounded-2xl p-8 border border-white/5 mb-6 animate-fade-up">
                     <div className="flex items-center gap-3 mb-4">
                         <ClipboardList size={18} className="text-primary" />
@@ -183,7 +186,6 @@ export default function MeetingsPage() {
                     </div>
                 </section>
 
-                {/* Error */}
                 {error && (
                     <div className="flex items-center gap-3 text-amber-200 text-sm p-4 bg-amber-500/10 rounded-xl border border-amber-500/20 mb-6 animate-fade-up">
                         <AlertCircle size={16} className="shrink-0" />
@@ -191,10 +193,8 @@ export default function MeetingsPage() {
                     </div>
                 )}
 
-                {/* Results */}
                 {result && (
                     <div className="grid gap-5 md:grid-cols-2 animate-fade-up">
-                        {/* Decisions Card */}
                         <section className="glass rounded-2xl p-8 border border-emerald-500/20">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="p-2 bg-emerald-500/10 rounded-lg">
@@ -205,7 +205,6 @@ export default function MeetingsPage() {
                             {renderList(result.decisions, "emerald")}
                         </section>
 
-                        {/* Action Items Card */}
                         <section className="glass rounded-2xl p-8 border border-blue-500/20">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="p-2 bg-blue-500/10 rounded-lg">
@@ -216,7 +215,6 @@ export default function MeetingsPage() {
                             {renderList(result.actionItems, "blue")}
                         </section>
 
-                        {/* AI Summary */}
                         {result.summary && (
                             <section className="md:col-span-2 relative group">
                                 <div className="absolute -inset-px bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-2xl blur opacity-60" />
@@ -234,7 +232,6 @@ export default function MeetingsPage() {
                     </div>
                 )}
 
-                {/* Empty state */}
                 {!result && !loading && !error && (
                     <div className="glass rounded-2xl p-16 border border-white/5 text-center animate-fade-up">
                         <CalendarDays size={48} className="mx-auto mb-4 text-slate-600" />
