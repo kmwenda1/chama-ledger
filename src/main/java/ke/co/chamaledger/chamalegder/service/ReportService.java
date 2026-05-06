@@ -31,7 +31,7 @@ public class ReportService {
 
     private final FundLedgerRepository fundLedgerRepository;
     private final ChamaMemberRepository chamaMemberRepository;
-    private final GeminiAiService geminiAiService;
+    private final GroqAiService groqAiService;           // ✅ Replaced GeminiAiService
     private final SmsService smsService;
 
     public WeeklyChamaHealthReport generateWeeklyHealthReport() {
@@ -59,7 +59,7 @@ public class ReportService {
                 .sorted(String.CASE_INSENSITIVE_ORDER)
                 .toList();
 
-        String executiveSummary = geminiAiService.generateExecutiveSummary(
+        String executiveSummary = groqAiService.generateExecutiveSummary(  // ✅ Replaced Gemini call
                 money(totalContributions),
                 money(currentBalance),
                 defaulters.size(),
