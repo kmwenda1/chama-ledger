@@ -33,8 +33,6 @@ public class SmsService {
             body.add("username", username);
             body.add("to", normalizedPhone);
             body.add("message", message);
-            // body.add("from", "CHAMA_LDGR"); // Uncomment once you register a Sender ID
-
             HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
 
             ResponseEntity<String> response = restTemplate.postForEntity(AT_URL, request, String.class);

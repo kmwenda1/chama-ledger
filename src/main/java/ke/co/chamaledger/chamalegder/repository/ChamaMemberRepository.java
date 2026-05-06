@@ -12,16 +12,12 @@ import java.util.UUID;
 @Repository
 public interface ChamaMemberRepository extends JpaRepository<ChamaMember, UUID> {
 
-    // Fix for DataInitializer
     Optional<ChamaMember> findByChama_IdAndUser_Id(UUID chamaId, UUID userId);
 
-    // Fix for MeetingService
     List<ChamaMember> findByUser_PhoneNumberAndIsActiveTrue(String phoneNumber);
 
-    // FIX FOR LoanService & LedgerService (The "cannot find symbol" error you just sent)
     Optional<ChamaMember> findFirstByUser_PhoneNumberAndIsActiveTrue(String phoneNumber);
 
-    // Used by other parts of LoanService
     Optional<ChamaMember> findFirstByChama_IdAndUser_PhoneNumberAndIsActiveTrue(UUID chamaId, String phoneNumber);
 
     @Query("SELECT cm FROM ChamaMember cm JOIN FETCH cm.user WHERE cm.isActive = true")

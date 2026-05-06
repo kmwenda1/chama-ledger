@@ -15,7 +15,6 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Normalize phone number
     let phone = form.phoneNumber.trim();
     if (phone.startsWith("0")) phone = "+254" + phone.substring(1);
     if (phone.startsWith("254") && !phone.startsWith("+")) phone = "+" + phone;

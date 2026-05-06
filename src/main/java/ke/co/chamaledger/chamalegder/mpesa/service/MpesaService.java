@@ -27,7 +27,7 @@ public class MpesaService {
 
     private final MpesaConfig mpesaConfig;
     private final RestTemplate restTemplate;
-    private final MpesaTransactionRepository transactionRepository; // Correct repository
+    private final MpesaTransactionRepository transactionRepository;
     private final LedgerService ledgerService;
     private final ObjectMapper objectMapper;
     private final PlatformTransactionManager transactionManager;
@@ -85,7 +85,6 @@ public class MpesaService {
 
             System.out.println("[CALLBACK DEBUG] ResultCode: " + resultCode + ", ResultDesc: " + resultDesc);
 
-            // Use MpesaTransactionRepository to find the record
             MpesaTransaction transaction = transactionRepository.findByCheckoutRequestID(checkoutRequestID)
                     .orElse(new MpesaTransaction());
 
@@ -108,7 +107,6 @@ public class MpesaService {
                     }
                 }
 
-                // Pass the MpesaTransaction object to LedgerService for business logic processing
                 System.out.println("[CALLBACK DEBUG] ResultCode is 0. Recording contribution now.");
                 ledgerService.recordContribution(transaction);
             } else {

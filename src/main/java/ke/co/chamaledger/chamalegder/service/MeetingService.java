@@ -19,7 +19,7 @@ public class MeetingService {
 
     private final MeetingRepository meetingRepository;
     private final ChamaMemberRepository chamaMemberRepository;
-    private final GeminiAiService geminiAiService;
+    private final GroqAiService groqAiService;          // ← Using Groq now
 
     @Transactional
     public MeetingResponse uploadMeetingNotes(String phone, MeetingUploadRequest request) {
@@ -27,7 +27,8 @@ public class MeetingService {
             throw new RuntimeException("You must be an active chama member to process meeting notes");
         }
 
-        JsonNode processedNotes = processMeetingWithGemini(request.getRawContent());
+        // Process with Groq
+        JsonNode processedNotes = groqAiService.analyzeMeetingNotes(request.getRawContent());
 
         Meeting meeting = Meeting.builder()
                 .title(request.getTitle())
@@ -41,24 +42,21 @@ public class MeetingService {
         return toResponse(meetingRepository.save(meeting));
     }
 
-    public JsonNode processMeetingWithGemini(String rawContent) {
-        return geminiAiService.analyzeMeetingNotes(rawContent);
-    }
-
     private boolean canUploadMeetingNotes(String phone) {
         return !findMemberships(phone).isEmpty();
     }
 
     private List<ChamaMember> findMemberships(String phone) {
         String normalizedPhone = normalizePhone(phone);
-
         List<ChamaMember> memberships = chamaMemberRepository
                 .findByUser_PhoneNumberAndIsActiveTrue(normalizedPhone);
+
         if (!memberships.isEmpty()) return memberships;
 
         String digits = normalizedPhone.replace("+", "");
         memberships = chamaMemberRepository
                 .findByUser_PhoneNumberAndIsActiveTrue(digits);
+
         if (!memberships.isEmpty()) return memberships;
 
         return chamaMemberRepository

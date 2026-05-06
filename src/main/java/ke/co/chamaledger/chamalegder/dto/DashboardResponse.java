@@ -19,18 +19,14 @@ public class DashboardResponse {
     private String aiInsight;
     private List<RecentTransactionDTO> recentTransactions;
 
-    // Auth & role
-    private String role;           // MEMBER, TREASURER, MANAGER
+    private String role;
     private String fullName;
 
-    // Loan eligibility
     private int trustScore;
     private boolean loanEligible;
     private String loanIneligibilityReason;
 
-    // MANAGER view
     private List<LoanDetailResponse> pendingLoans;
 
-    // TREASURER view
     private List<MpesaLogDTO> mpesaLogs;
 }

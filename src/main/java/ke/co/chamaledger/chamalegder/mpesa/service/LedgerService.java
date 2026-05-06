@@ -45,12 +45,10 @@ public class LedgerService {
             return;
         }
 
-        // 1. Identify the member by phone number
         String memberName = findMemberNameByPhone(phone)
                 .map(member -> member.getUser().getFullName())
                 .orElse("Guest Contributor (" + phone + ")");
 
-        // 2. Update Group Running Balance (Double-Entry)
         BigDecimal lastBalance = ledgerRepository.findTopByOrderByIdDesc()
                 .map(FundLedger::getRunningBalance)
                 .orElse(BigDecimal.ZERO);
@@ -68,7 +66,6 @@ public class LedgerService {
 
         System.out.println("\n[CHAMA SYSTEM] >>> SUCCESS: Recorded KES " + amount + " from " + memberName + ". Receipt: " + referenceId + ". New Balance: " + lastBalance.add(amount));
 
-        // 3. Send SMS notification
         String message = String.format(
                 "Hello %s, we have received your Chama contribution of KES %s. Receipt: %s. Your group balance has been updated.",
                 memberName,

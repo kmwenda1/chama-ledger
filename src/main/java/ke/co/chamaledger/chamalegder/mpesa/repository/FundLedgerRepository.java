@@ -14,9 +14,6 @@ import java.util.Optional;
 @Repository
 public interface FundLedgerRepository extends JpaRepository<FundLedger, Long> {
 
-    /**
-     * Gets the most recent ledger entry to retrieve the current running balance.
-     */
     Optional<FundLedger> findTopByOrderByIdDesc();
 
     Optional<FundLedger> findByReferenceId(String referenceId);

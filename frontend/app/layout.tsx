@@ -3,13 +3,11 @@ import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 
-// Load Inter for body text
 const inter = Inter({
     subsets: ['latin'],
     variable: '--font-inter',
 });
 
-// Load Plus Jakarta Sans for headings (The Lovable Look)
 const plusJakarta = Plus_Jakarta_Sans({
     subsets: ['latin'],
     variable: '--font-plus-jakarta',

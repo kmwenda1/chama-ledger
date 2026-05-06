@@ -22,7 +22,6 @@ public class DataInitializer implements CommandLineRunner {
 
     private static final String SEED_CHAMA_REG = "CL-SEED-001";
 
-    // Seed account definitions — phone : rawPassword : fullName : chamaRole
     private static final String[][] SEED_USERS = {
             {"254711111111", "Admin@123",      "Admin Manager",    "CHAIRPERSON"},
             {"254722222222", "Treasurer@123",  "Finance Treasurer","TREASURER"},
@@ -39,7 +38,6 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) {
         log.info("[Seed] Provisioning/refreshing seed accounts…");
 
-        // 1. Upsert seed users (always sync passwords so they're never stale)
         User[] users = new User[SEED_USERS.length];
         for (int i = 0; i < SEED_USERS.length; i++) {
             String phone    = SEED_USERS[i][0];
@@ -52,7 +50,6 @@ public class DataInitializer implements CommandLineRunner {
         User treasurer = users[1];
         User member    = users[2];
 
-        // 2. Upsert seed chama
         Chama chama = chamaRepository.findAll().stream()
                 .filter(c -> SEED_CHAMA_REG.equals(c.getRegistrationNumber()))
                 .findFirst()
@@ -71,7 +68,6 @@ public class DataInitializer implements CommandLineRunner {
                                 .build()
                 ));
 
-        // 3. Upsert memberships
         for (int i = 0; i < SEED_USERS.length; i++) {
             ensureMember(chama, users[i], SEED_USERS[i][3]);
         }
@@ -85,7 +81,6 @@ public class DataInitializer implements CommandLineRunner {
     private User upsertUser(String phone, String fullName, String rawPassword) {
         return userRepository.findByPhoneNumber(phone)
                 .map(existing -> {
-                    // Always reset seed password so it's never stale
                     existing.setPasswordHash(passwordEncoder.encode(rawPassword));
                     return userRepository.save(existing);
                 })

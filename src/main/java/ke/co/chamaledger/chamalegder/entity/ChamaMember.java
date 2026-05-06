@@ -19,18 +19,16 @@ public class ChamaMember {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    // Links to the Chama table
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chama_id", nullable = false)
     private Chama chama;
 
-    // Links to the User table
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Column(nullable = false, length = 20)
-    private String role; // Values: CHAIRPERSON, TREASURER, SECRETARY, or MEMBER
+    private String role;
 
     @CreationTimestamp
     @Column(name = "joined_at", updatable = false)

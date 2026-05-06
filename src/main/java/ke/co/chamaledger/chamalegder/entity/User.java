@@ -19,7 +19,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User implements UserDetails { // <-- This is the magic addition
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -59,22 +59,19 @@ public class User implements UserDetails { // <-- This is the magic addition
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // --- SPRING SECURITY METHODS --- //
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // By default, everyone is a standard user. We can add roles later if needed.
         return List.of(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
     @Override
     public String getPassword() {
-        return passwordHash; // Tells Spring which field holds our password
+        return passwordHash;
     }
 
     @Override
     public String getUsername() {
-        return phoneNumber; // In ChamaLedger, phone number acts as the username!
+        return phoneNumber;
     }
 
     @Override

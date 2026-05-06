@@ -21,7 +21,6 @@ public class ChamaController {
             @RequestBody ChamaRequest request,
             @AuthenticationPrincipal User currentUser
     ) {
-        // This calls the service method you just wrote
         return ResponseEntity.ok(chamaService.createChama(request, currentUser));
     }
 }

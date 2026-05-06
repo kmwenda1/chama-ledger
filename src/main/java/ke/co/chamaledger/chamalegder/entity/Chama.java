@@ -37,7 +37,7 @@ public class Chama {
     private String accountNumber;
 
     @Column(name = "monthly_contribution", nullable = false, precision = 12, scale = 2)
-    private BigDecimal monthlyContribution; // Using BigDecimal for accurate money math!
+    private BigDecimal monthlyContribution;
 
     @Column(name = "contribution_day", nullable = false)
     private Integer contributionDay;
@@ -56,7 +56,6 @@ public class Chama {
     @Builder.Default
     private Boolean isActive = true;
 
-    // This creates the foreign key relationship to the User table!
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", referencedColumnName = "id")
     private User createdBy;

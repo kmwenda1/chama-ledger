@@ -1,11 +1,16 @@
 spring:
   application:
     name: chamaledger
+
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/chamaledger_db?sslmode=require}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:1234}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -13,23 +18,29 @@ spring:
     properties:
       hibernate:
         format_sql: true
+    open-in-view: false
+
   flyway:
     enabled: false
-    baseline-on-migrate: true
 
+# JWT
 jwt:
   secret: ${JWT_SECRET:MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNA==}
   expiration: 86400000
 
-# Third Party Integrations
+# Third Party
 app:
   africas-talking:
     api-key: ${AT_API_KEY}
     username: ${AT_USERNAME:sandbox}
+
   groq:
     api-key: ${GROQ_API_KEY}
+    model: llama-3.1-8b-instant
+    temperature: 0.2
+    max-tokens: 2048
 
-# M-Pesa Daraja API Configuration
+# M-Pesa
 mpesa:
   consumer-key: ${MPESA_CONSUMER_KEY}
   consumer-secret: ${MPESA_CONSUMER_SECRET}
@@ -40,3 +51,7 @@ mpesa:
   shortcode: "174379"
   passkey: "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
   callback-url: ${MPESA_CALLBACK_URL}
+
+logging:
+  level:
+    ke.co.chamaledger: DEBUG

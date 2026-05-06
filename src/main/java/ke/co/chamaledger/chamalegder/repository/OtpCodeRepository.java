@@ -10,7 +10,6 @@ import java.util.UUID;
 @Repository
 public interface OtpCodeRepository extends JpaRepository<OtpCode, UUID> {
 
-    // Finds the most recent matching OTP code for verification
     Optional<OtpCode> findFirstByPhoneNumberAndCodeAndPurposeOrderByCreatedAtDesc(
             String phoneNumber, String code, String purpose);
 }

@@ -14,7 +14,6 @@ public class ChamalegderApplication {
         SpringApplication.run(ChamalegderApplication.class, args);
     }
 
-    // Add this Bean so your MpesaService can use it to talk to Safaricom
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();

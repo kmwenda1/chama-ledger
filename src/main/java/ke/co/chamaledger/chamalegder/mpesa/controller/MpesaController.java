@@ -16,9 +16,6 @@ public class MpesaController {
 
     private final MpesaService mpesaService;
 
-    /**
-     * Endpoint to trigger the STK Push PIN prompt on a user's phone.
-     */
     @PostMapping("/stk-push")
     public ResponseEntity<String> initiatePayment(
             @RequestParam String phoneNumber,
@@ -30,17 +27,12 @@ public class MpesaController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Webhook called by Safaricom Daraja API after the user enters their PIN.
-     */
     @PostMapping("/callback")
     public ResponseEntity<Map<String, Object>> receiveMpesaCallback(@RequestBody String jsonResponse) {
         System.out.println("[CALLBACK DEBUG] M-Pesa callback endpoint was hit.");
 
-        // Process and save to database
         mpesaService.processCallback(jsonResponse);
 
-        // Return 200 OK so Safaricom knows we got the message
         return ResponseEntity.ok(Map.of(
                 "ResultCode", 0,
                 "ResultDesc", "Success"

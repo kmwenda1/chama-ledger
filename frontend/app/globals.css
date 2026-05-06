@@ -6,7 +6,6 @@
 
 @layer base {
   :root {
-    /* Restore the Original ChamaLedger Dark Palette */
     --background: 160 35% 6%;
     --foreground: 40 33% 95%;
 
@@ -16,7 +15,6 @@
     --popover: 160 30% 10%;
     --popover-foreground: 40 33% 95%;
 
-    /* The Signature Chama Green */
     --primary: 158 55% 45%;
     --primary-foreground: 160 35% 6%;
     --primary-glow: 158 60% 55%;
@@ -27,7 +25,6 @@
     --muted: 160 25% 14%;
     --muted-foreground: 40 15% 65%;
 
-    /* Accent Amber (for Loans/Warnings) */
     --accent: 38 92% 58%;
     --accent-foreground: 160 35% 6%;
     --accent-soft: 38 40% 20%;
@@ -44,7 +41,6 @@
 
     --radius: 0.75rem;
 
-    /* Sidebar - Matching the Glass-Strong look */
     --sidebar-background: 160 35% 4%;
     --sidebar-foreground: 40 15% 65%;
     --sidebar-primary: 158 55% 45%;
@@ -65,7 +61,6 @@
     @apply bg-background text-foreground font-sans;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* Apply subtle noise to whole body for that high-end feel */
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.02'/%3E%3C/svg%3E");
   }
 
@@ -75,7 +70,6 @@
 }
 
 @layer utilities {
-  /* Glassmorphism - Fixed to use the new HSL variables correctly */
   .glass {
     background: hsl(var(--card) / 0.6);
     backdrop-filter: blur(12px);
@@ -90,7 +84,6 @@
     border: 1px solid hsl(var(--primary) / 0.1);
   }
 
-  /* Glow effects */
   .glow-primary {
     box-shadow: 0 0 20px hsl(var(--primary-glow) / 0.3),
     0 0 40px hsl(var(--primary-glow) / 0.1);
@@ -100,7 +93,6 @@
     text-shadow: 0 0 15px hsl(var(--primary-glow) / 0.4);
   }
 
-  /* Shimmer effect for cards */
   .shimmer {
     background-size: 200% 100%;
     background-image: linear-gradient(
@@ -117,7 +109,6 @@
     100% { background-position: 200% 0; }
   }
 
-  /* Gradient border utility */
   .border-gradient {
     position: relative;
   }

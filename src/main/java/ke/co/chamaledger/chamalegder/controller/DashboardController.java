@@ -72,7 +72,6 @@ public class DashboardController {
                 .map(this::toRecentTransaction)
                 .toList();
 
-        // Resolve role and member info
         Optional<ChamaMember> membership = phone.isEmpty()
                 ? Optional.empty()
                 : chamaMemberRepository.findFirstByUser_PhoneNumberAndIsActiveTrue(phone);
@@ -80,7 +79,6 @@ public class DashboardController {
         String role = membership.map(m -> mapChamaRole(m.getRole())).orElse("MEMBER");
         String fullName = membership.map(m -> m.getUser().getFullName()).orElse("");
 
-        // Trust score + loan eligibility
         int trustScore = phone.isEmpty() ? 0 : loanService.calculateTrustScore(phone);
         String ineligibilityReason = phone.isEmpty() ? null : loanService.getLoanIneligibilityReason(phone);
         User memberUser = membership.map(ChamaMember::getUser).orElse(null);
@@ -88,7 +86,6 @@ public class DashboardController {
                 && loanRepository.existsByBorrowerAndStatusIn(memberUser, ACTIVE_LOAN_STATUSES);
         boolean loanEligible = ineligibilityReason == null && !hasActiveLoan;
 
-        // Role-specific data
         List<LoanDetailResponse> pendingLoans = null;
         List<MpesaLogDTO> mpesaLogs = null;
 

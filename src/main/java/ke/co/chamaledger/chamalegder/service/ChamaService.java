@@ -19,7 +19,6 @@ public class ChamaService {
 
     @Transactional
     public Chama createChama(ChamaRequest request, User currentUser) {
-        // Your logic remains the same - it's perfect for a Service
         Chama chama = Chama.builder()
                 .name(request.getName())
                 .description(request.getDescription())
