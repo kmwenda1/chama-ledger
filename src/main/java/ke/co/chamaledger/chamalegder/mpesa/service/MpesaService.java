@@ -45,6 +45,8 @@ public class MpesaService {
     }
 
     public String sendStkPush(String phone, String amount, String reference) {
+        if (phone.startsWith("+")) phone = phone.substring(1);
+        if (phone.startsWith("0")) phone = "254" + phone.substring(1);
         String timestamp = MpesaUtils.getTimestamp();
         String password = MpesaUtils.getPassword(mpesaConfig.getShortcode(), mpesaConfig.getPasskey(), timestamp);
 
