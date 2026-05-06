@@ -4,15 +4,15 @@ import Link from "next/link";
 import { useDashboardData, PendingLoan, MpesaLog } from "@/hooks/useDashboardData";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/Toast";
+import { Sidebar } from "@/components/Sidebar";
 import {
-  Wallet, Users, PiggyBank, LayoutDashboard, History, TrendingUp,
-  ArrowLeft, AlertCircle, Sparkles, Plus, LogOut, CheckCircle, XCircle,
+  Wallet, Users, PiggyBank, TrendingUp,
+  AlertCircle, Sparkles, Plus, CheckCircle, XCircle,
   Shield, Clock, Banknote, Loader2, Lock,
 } from "lucide-react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL + "/api/v1";
 
-// ────── Trust Score Gauge ──────
 function TrustScoreGauge({ score }: { score: number }) {
   const radius = 42;
   const circumference = 2 * Math.PI * radius;
@@ -45,7 +45,6 @@ function TrustScoreGauge({ score }: { score: number }) {
   );
 }
 
-// ────── Stat Card ──────
 function StatCard({ title, value, icon, color, trend }: { title: string; value: string; icon: React.ReactNode; color: string; trend: string }) {
   const borderColors: Record<string, string> = {
     blue: "border-blue-500/20 hover:border-blue-500/40",
@@ -65,7 +64,6 @@ function StatCard({ title, value, icon, color, trend }: { title: string; value: 
   );
 }
 
-// ────── MEMBER view ──────
 function MemberView({ data, onContribute, contributing }: {
   data: NonNullable<ReturnType<typeof useDashboardData>["data"]>;
   onContribute: () => void;
@@ -73,7 +71,6 @@ function MemberView({ data, onContribute, contributing }: {
 }) {
   return (
     <>
-      {/* Stats */}
       <div className="grid gap-5 md:grid-cols-3 mb-8">
         <StatCard
           title="Personal Savings"
@@ -98,7 +95,6 @@ function MemberView({ data, onContribute, contributing }: {
         />
       </div>
 
-      {/* Trust Score + Loan */}
       <div className="grid gap-5 md:grid-cols-2 mb-8">
         <div className="glass rounded-2xl p-7 border border-white/5 flex flex-col items-center justify-center gap-4">
           <TrustScoreGauge score={data.trustScore} />
@@ -156,7 +152,6 @@ function MemberView({ data, onContribute, contributing }: {
   );
 }
 
-// ────── MANAGER view ──────
 function ManagerView({ pendingLoans }: { pendingLoans: PendingLoan[] | null }) {
   return (
     <section className="glass rounded-2xl p-8 border border-white/5 mb-8">
@@ -208,7 +203,6 @@ function ManagerView({ pendingLoans }: { pendingLoans: PendingLoan[] | null }) {
   );
 }
 
-// ────── TREASURER view ──────
 function TreasurerView({ mpesaLogs }: { mpesaLogs: MpesaLog[] | null }) {
   return (
     <section className="glass rounded-2xl p-8 border border-white/5 mb-8">
@@ -265,10 +259,9 @@ function TreasurerView({ mpesaLogs }: { mpesaLogs: MpesaLog[] | null }) {
   );
 }
 
-// ────── Main Dashboard ──────
 export default function Dashboard() {
   const { data, loading, error, refetch } = useDashboardData();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const [contributing, setContributing] = useState(false);
   const [contributeAmount, setContributeAmount] = useState("500");
@@ -290,7 +283,6 @@ export default function Dashboard() {
       showToast(`M-Pesa prompt sent to ${user.phoneNumber}. Enter your PIN to confirm.`, "success");
       setShowContributeModal(false);
 
-      // Poll for confirmation (max 2 min, every 5s)
       let attempts = 0;
       const prevSavings = data?.personalSavings;
       const poll = setInterval(async () => {
@@ -340,7 +332,6 @@ export default function Dashboard() {
 
   return (
     <>
-      {/* Contribute modal */}
       {showContributeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="glass-strong rounded-3xl p-8 border border-white/10 shadow-elegant w-full max-w-sm mx-4 animate-fade-up">
@@ -382,61 +373,13 @@ export default function Dashboard() {
       )}
 
       <div className="min-h-screen bg-background text-slate-50 flex">
-        {/* Ambient glow */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/8 blur-[120px]" />
           <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/5 blur-[120px]" />
         </div>
 
-        {/* Sidebar */}
-        <aside className="relative z-10 w-64 glass-strong p-6 hidden md:flex flex-col gap-8">
-          <Link href="/" className="flex items-center gap-3 font-display font-bold text-xl tracking-tight text-white hover:opacity-80 transition-opacity">
-            <div className="bg-primary p-2 rounded-xl shadow-glow-sm">
-              <Wallet size={18} className="text-primary-foreground" />
-            </div>
-            ChamaLedger
-          </Link>
+        <Sidebar />
 
-          <nav className="space-y-1">
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary border border-primary/20">
-              <LayoutDashboard size={17} />
-              <span className="font-semibold text-sm">Dashboard</span>
-            </div>
-            {[
-              { label: "Activity", icon: <History size={17} /> },
-              { label: "Loans", icon: <TrendingUp size={17} /> },
-              { label: "Members", icon: <Users size={17} /> },
-            ].map(({ label, icon }) => (
-              <div key={label} className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/5 hover:text-white transition-all cursor-pointer">
-                {icon}
-                <span className="font-medium text-sm">{label}</span>
-              </div>
-            ))}
-          </nav>
-
-          <div className="mt-auto space-y-3">
-            {user && (
-              <div className="px-4 py-3 glass rounded-xl border border-white/5">
-                <p className="text-xs font-bold text-white truncate">{displayName}</p>
-                <p className="text-[10px] text-slate-500 truncate">{user.phoneNumber}</p>
-                <span className={`inline-block mt-1.5 text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border ${roleBadgeColor[role] || roleBadgeColor.MEMBER}`}>
-                  {roleLabel[role] || role}
-                </span>
-              </div>
-            )}
-            <button
-              onClick={logout}
-              className="w-full flex items-center gap-2 text-xs text-slate-500 hover:text-white transition-colors px-4 py-2 rounded-lg hover:bg-white/5"
-            >
-              <LogOut size={14} /> Sign Out
-            </button>
-            <Link href="/" className="flex items-center gap-2 text-xs text-slate-500 hover:text-white transition-colors px-4 py-2">
-              <ArrowLeft size={14} /> Back to Home
-            </Link>
-          </div>
-        </aside>
-
-        {/* Main */}
         <main className="relative z-10 flex-1 p-6 lg:p-10 overflow-y-auto">
           <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
             <div className="animate-fade-up">
@@ -475,7 +418,6 @@ export default function Dashboard() {
             )}
           </header>
 
-          {/* Shared stats (all roles) */}
           <div className="grid gap-5 md:grid-cols-3 mb-8">
             <StatCard
               title="Group Balance"
@@ -500,7 +442,6 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* Role-specific views */}
           {role === "MEMBER" && data && (
             <MemberView
               data={data}
@@ -517,7 +458,6 @@ export default function Dashboard() {
             <TreasurerView mpesaLogs={data?.mpesaLogs ?? null} />
           )}
 
-          {/* AI Insight (all roles) */}
           <div className="relative group mb-8 animate-fade-up">
             <div className="absolute -inset-px bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-2xl blur opacity-60" />
             <section className="relative glass rounded-2xl p-8 border border-white/10">
@@ -531,7 +471,6 @@ export default function Dashboard() {
             </section>
           </div>
 
-          {/* Recent transactions */}
           <section className="glass rounded-2xl p-8 border border-white/5 animate-fade-up">
             <h2 className="font-display font-bold text-lg text-white mb-6">Recent Activity</h2>
             {data?.recentTransactions?.length ? (
