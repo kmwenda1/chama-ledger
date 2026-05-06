@@ -22,7 +22,7 @@ import java.util.Map;
 @Slf4j
 public class GeminiAiService {
 
-    private static final String GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    private static final String GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
     private static final String SECRETARY_PROMPT = "Act as a Chama Secretary. Extract the summary, decisions, and action items from these notes in JSON format.";
 
     private final RestTemplate restTemplate;
