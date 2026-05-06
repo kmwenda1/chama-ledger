@@ -10,8 +10,8 @@ import {
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL + "/api/v1";
 
 interface MeetingResult {
-    decisions: string[];
-    actionItems: { task: string; assignee?: string }[];
+    decisions: any;
+    actionItems: any;
     summary?: string;
 }
 
@@ -37,13 +37,17 @@ export default function MeetingsPage() {
         setResult(null);
 
         try {
-            const res = await fetch(`${API_BASE}/meetings/process`, {
+            const res = await fetch(`${API_BASE}/meetings`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     ...getAuthHeader(),
                 },
-                body: JSON.stringify({ chatText }),
+                body: JSON.stringify({
+                    rawContent: chatText,
+                    title: "Meeting " + new Date().toLocaleDateString(),
+                    meetingDate: new Date().toISOString().split("T")[0],
+                }),
             });
 
             if (!res.ok) {
@@ -58,6 +62,54 @@ export default function MeetingsPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Helper to safely render decisions/actionItems whether they are
+    // a JsonNode array, a plain JS array, or a string
+    const renderList = (data: any, color: "emerald" | "blue") => {
+        let items: string[] = [];
+
+        if (!data) {
+            items = [];
+        } else if (Array.isArray(data)) {
+            items = data.map((d: any) =>
+                typeof d === "string" ? d : d.task || d.description || JSON.stringify(d)
+            );
+        } else if (typeof data === "string") {
+            items = data.split("\n").filter(Boolean);
+        } else if (typeof data === "object") {
+            // JsonNode serialized as object
+            items = Object.values(data).map((v: any) =>
+                typeof v === "string" ? v : JSON.stringify(v)
+            );
+        }
+
+        const bg = color === "emerald" ? "bg-emerald-500/20 text-emerald-400" : "bg-blue-500/20 text-blue-400";
+        const border = color === "emerald" ? "border-emerald-500/20" : "border-blue-500/20";
+
+        if (items.length === 0) {
+            return (
+                <div className="text-center py-10 text-slate-500 border-2 border-dashed border-white/5 rounded-xl">
+                    {color === "emerald"
+                        ? <CheckSquare size={28} className="mx-auto mb-3 opacity-30" />
+                        : <FileText size={28} className="mx-auto mb-3 opacity-30" />}
+                    Nothing found in this chat.
+                </div>
+            );
+        }
+
+        return (
+            <ul className="space-y-3">
+                {items.map((item, i) => (
+                    <li key={i} className="flex items-start gap-3 p-3 bg-white/[0.03] rounded-xl border border-white/5">
+            <span className={`shrink-0 w-5 h-5 rounded-full ${bg} text-[10px] font-bold flex items-center justify-center mt-0.5`}>
+              {i + 1}
+            </span>
+                        <p className="text-sm text-slate-300 leading-relaxed">{item}</p>
+                    </li>
+                ))}
+            </ul>
+        );
     };
 
     return (
@@ -149,30 +201,8 @@ export default function MeetingsPage() {
                                     <CheckSquare size={18} className="text-emerald-400" />
                                 </div>
                                 <h2 className="font-display font-bold text-lg text-white">Decisions</h2>
-                                <span className="ml-auto text-xs font-bold bg-emerald-500/20 text-emerald-400 px-2.5 py-1 rounded-full">
-                  {result.decisions.length}
-                </span>
                             </div>
-                            {result.decisions.length > 0 ? (
-                                <ul className="space-y-3">
-                                    {result.decisions.map((decision, i) => (
-                                        <li
-                                            key={i}
-                                            className="flex items-start gap-3 p-3 bg-white/[0.03] rounded-xl border border-white/5"
-                                        >
-                      <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold flex items-center justify-center mt-0.5">
-                        {i + 1}
-                      </span>
-                                            <p className="text-sm text-slate-300 leading-relaxed">{decision}</p>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <div className="text-center py-10 text-slate-500 border-2 border-dashed border-white/5 rounded-xl">
-                                    <CheckSquare size={28} className="mx-auto mb-3 opacity-30" />
-                                    No decisions found in this chat.
-                                </div>
-                            )}
+                            {renderList(result.decisions, "emerald")}
                         </section>
 
                         {/* Action Items Card */}
@@ -182,40 +212,11 @@ export default function MeetingsPage() {
                                     <FileText size={18} className="text-blue-400" />
                                 </div>
                                 <h2 className="font-display font-bold text-lg text-white">Action Items</h2>
-                                <span className="ml-auto text-xs font-bold bg-blue-500/20 text-blue-400 px-2.5 py-1 rounded-full">
-                  {result.actionItems.length}
-                </span>
                             </div>
-                            {result.actionItems.length > 0 ? (
-                                <ul className="space-y-3">
-                                    {result.actionItems.map((item, i) => (
-                                        <li
-                                            key={i}
-                                            className="flex items-start gap-3 p-3 bg-white/[0.03] rounded-xl border border-white/5"
-                                        >
-                      <span className="shrink-0 w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 text-[10px] font-bold flex items-center justify-center mt-0.5">
-                        {i + 1}
-                      </span>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm text-slate-300 leading-relaxed">{item.task}</p>
-                                                {item.assignee && (
-                                                    <p className="text-[11px] text-blue-400 font-semibold mt-1">
-                                                        → {item.assignee}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <div className="text-center py-10 text-slate-500 border-2 border-dashed border-white/5 rounded-xl">
-                                    <FileText size={28} className="mx-auto mb-3 opacity-30" />
-                                    No action items found in this chat.
-                                </div>
-                            )}
+                            {renderList(result.actionItems, "blue")}
                         </section>
 
-                        {/* AI Summary - full width if present */}
+                        {/* AI Summary */}
                         {result.summary && (
                             <section className="md:col-span-2 relative group">
                                 <div className="absolute -inset-px bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-2xl blur opacity-60" />
