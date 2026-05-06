@@ -24,7 +24,7 @@ public class MeetingService {
     @Transactional
     public MeetingResponse uploadMeetingNotes(String phone, MeetingUploadRequest request) {
         if (!canUploadMeetingNotes(phone)) {
-            throw new RuntimeException("Only CHAIRPERSON or SECRETARY members can upload meeting notes");
+            throw new RuntimeException("You must be an active chama member to process meeting notes");
         }
 
         JsonNode processedNotes = processMeetingWithGemini(request.getRawContent());
@@ -46,21 +46,23 @@ public class MeetingService {
     }
 
     private boolean canUploadMeetingNotes(String phone) {
-        return findMemberships(phone).stream()
-                .map(ChamaMember::getRole)
-                .anyMatch(role -> "CHAIRPERSON".equalsIgnoreCase(role) || "SECRETARY".equalsIgnoreCase(role));
+        return !findMemberships(phone).isEmpty();
     }
 
     private List<ChamaMember> findMemberships(String phone) {
         String normalizedPhone = normalizePhone(phone);
-        List<ChamaMember> memberships = chamaMemberRepository.findByUser_PhoneNumberAndIsActiveTrue(normalizedPhone);
+
+        List<ChamaMember> memberships = chamaMemberRepository
+                .findByUser_PhoneNumberAndIsActiveTrue(normalizedPhone);
         if (!memberships.isEmpty()) return memberships;
 
         String digits = normalizedPhone.replace("+", "");
-        memberships = chamaMemberRepository.findByUser_PhoneNumberAndIsActiveTrue(digits);
+        memberships = chamaMemberRepository
+                .findByUser_PhoneNumberAndIsActiveTrue(digits);
         if (!memberships.isEmpty()) return memberships;
 
-        return chamaMemberRepository.findByUser_PhoneNumberAndIsActiveTrue(phone);
+        return chamaMemberRepository
+                .findByUser_PhoneNumberAndIsActiveTrue(phone);
     }
 
     private MeetingResponse toResponse(Meeting meeting) {
