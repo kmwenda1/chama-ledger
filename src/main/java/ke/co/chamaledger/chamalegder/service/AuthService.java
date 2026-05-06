@@ -69,6 +69,7 @@ public class AuthService {
                 .build();
     }
 
+    @Transactional
     public AuthResponse login(LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -79,6 +80,9 @@ public class AuthService {
 
         User user = userRepository.findByPhoneNumber(request.getPhoneNumber())
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Auto-add to default chama if not already a member
+        addToDefaultChama(user);
 
         String jwtToken = jwtService.generateToken(user);
         String role = resolveRole(request.getPhoneNumber());
@@ -111,7 +115,8 @@ public class AuthService {
                     .isPresent();
 
             if (alreadyMember) {
-                log.info("[Auth] User {} is already a member of chama {}", user.getPhoneNumber(), chama.getName());
+                log.info("[Auth] User {} is already a member of chama {}",
+                        user.getPhoneNumber(), chama.getName());
                 return;
             }
 
@@ -123,10 +128,12 @@ public class AuthService {
                     .build();
 
             chamaMemberRepository.save(member);
-            log.info("[Auth] User {} auto-added as MEMBER to chama '{}'", user.getPhoneNumber(), chama.getName());
+            log.info("[Auth] User {} auto-added as MEMBER to chama '{}'",
+                    user.getPhoneNumber(), chama.getName());
 
         } catch (Exception e) {
-            log.error("[Auth] Failed to auto-add user {} to default chama: {}", user.getPhoneNumber(), e.getMessage());
+            log.error("[Auth] Failed to auto-add user {} to default chama: {}",
+                    user.getPhoneNumber(), e.getMessage());
         }
     }
 
