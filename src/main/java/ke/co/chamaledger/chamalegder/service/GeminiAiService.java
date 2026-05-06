@@ -11,7 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -22,23 +21,39 @@ import java.util.Map;
 @Slf4j
 public class GeminiAiService {
 
-    private static final String GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-    private static final String SECRETARY_PROMPT = "Act as a Chama Secretary. Extract the summary, decisions, and action items from these notes in JSON format.";
+    private static final String GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+    private static final String GROQ_MODEL = "llama3-8b-8192";
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
-    @Value("${app.gemini.api-key:}")
-    private String geminiApiKey;
+    @Value("${app.groq.api-key:}")
+    private String groqApiKey;
 
     public JsonNode analyzeMeetingNotes(String rawContent) {
-        String prompt = SECRETARY_PROMPT + "\nReturn only valid JSON with keys: summary, decisions, actionItems.\n\nNotes:\n" + rawContent;
-        String text = generateText(prompt, "application/json");
+        String prompt = """
+                Act as a Chama Secretary. Extract the summary, decisions, and action items from these meeting notes.
+                Return ONLY valid JSON with exactly these keys: summary, decisions, actionItems.
+                - summary: a short paragraph summarizing the meeting
+                - decisions: an array of strings, each being a decision made
+                - actionItems: an array of objects with keys: task and assignee
+                Do not include any text outside the JSON.
+                
+                Meeting Notes:
+                """ + rawContent;
+
+        String text = generateText(prompt);
 
         try {
-            return objectMapper.readTree(text);
+            // Clean up markdown code blocks if present
+            String cleaned = text
+                    .replaceAll("```json", "")
+                    .replaceAll("```", "")
+                    .trim();
+            return objectMapper.readTree(cleaned);
         } catch (Exception e) {
-            throw new RuntimeException("Gemini returned invalid JSON", e);
+            log.error("Groq returned invalid JSON: {}", text);
+            throw new RuntimeException("Groq returned invalid JSON: " + e.getMessage());
         }
     }
 
@@ -46,7 +61,9 @@ public class GeminiAiService {
                                            BigDecimal currentBalance,
                                            int defaulterCount,
                                            int activeMemberCount) {
-        String fallback = fallbackExecutiveSummary(weeklyContributions, currentBalance, defaulterCount, activeMemberCount);
+        String fallback = fallbackExecutiveSummary(
+                weeklyContributions, currentBalance, defaulterCount, activeMemberCount);
+
         String prompt = """
                 Act as a Chama financial advisor. Write exactly two short sentences for leaders.
                 Keep the whole response under 180 characters. Mention whether collections are healthy or need follow-up.
@@ -56,57 +73,48 @@ public class GeminiAiService {
                 """.formatted(weeklyContributions, currentBalance, defaulterCount, activeMemberCount);
 
         try {
-            return enforceTwoSentences(generateText(prompt, null), fallback);
+            return enforceTwoSentences(generateText(prompt), fallback);
         } catch (Exception e) {
-            log.warn("Falling back to local executive summary because Gemini failed: {}", e.getMessage());
+            log.warn("Falling back to local executive summary because Groq failed: {}", e.getMessage());
             return fallback;
         }
     }
 
-    private String generateText(String prompt, String responseMimeType) {
-        if (geminiApiKey == null || geminiApiKey.isBlank()) {
-            throw new RuntimeException("Gemini API key is not configured");
-        }
-
-        Map<String, Object> body = Map.of(
-                "contents", List.of(Map.of(
-                        "parts", List.of(Map.of("text", prompt))
-                ))
-        );
-
-        if (responseMimeType != null && !responseMimeType.isBlank()) {
-            body = Map.of(
-                    "contents", List.of(Map.of(
-                            "parts", List.of(Map.of("text", prompt))
-                    )),
-                    "generationConfig", Map.of("responseMimeType", responseMimeType)
-            );
+    private String generateText(String prompt) {
+        if (groqApiKey == null || groqApiKey.isBlank()) {
+            throw new RuntimeException("Groq API key is not configured");
         }
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(groqApiKey);
+
+        Map<String, Object> body = Map.of(
+                "model", GROQ_MODEL,
+                "messages", List.of(
+                        Map.of("role", "user", "content", prompt)
+                ),
+                "temperature", 0.3
+        );
+
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
-        String url = UriComponentsBuilder.fromHttpUrl(GEMINI_URL)
-                .queryParam("key", geminiApiKey)
-                .toUriString();
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                GROQ_URL, request, JsonNode.class);
 
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, request, JsonNode.class);
         JsonNode responseBody = response.getBody();
         if (responseBody == null) {
-            throw new RuntimeException("Gemini returned an empty response body");
+            throw new RuntimeException("Groq returned an empty response body");
         }
 
         JsonNode textNode = responseBody
-                .path("candidates")
+                .path("choices")
                 .path(0)
-                .path("content")
-                .path("parts")
-                .path(0)
-                .path("text");
+                .path("message")
+                .path("content");
 
         if (textNode.isMissingNode() || textNode.asText().isBlank()) {
-            throw new RuntimeException("Gemini returned an empty response");
+            throw new RuntimeException("Groq returned an empty response");
         }
 
         return textNode.asText().trim();
@@ -128,9 +136,7 @@ public class GeminiAiService {
 
     private String enforceTwoSentences(String summary, String fallback) {
         String cleaned = cleanText(summary);
-        if (cleaned.isBlank()) {
-            return fallback;
-        }
+        if (cleaned.isBlank()) return fallback;
 
         String[] sentences = cleaned.split("(?<=[.!?])\\s+");
         if (sentences.length >= 2) {
@@ -146,9 +152,7 @@ public class GeminiAiService {
 
     private String secondFallbackSentence(String fallback) {
         String[] sentences = fallback.split("(?<=[.!?])\\s+");
-        if (sentences.length >= 2) {
-            return sentences[1].trim();
-        }
+        if (sentences.length >= 2) return sentences[1].trim();
         return "Leaders should review member follow-up.";
     }
 
