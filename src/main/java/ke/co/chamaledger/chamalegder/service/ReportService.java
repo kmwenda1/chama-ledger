@@ -3,7 +3,7 @@ package ke.co.chamaledger.chamalegder.service;
 import ke.co.chamaledger.chamalegder.entity.ChamaMember;
 import ke.co.chamaledger.chamalegder.model.FundLedger;
 import ke.co.chamaledger.chamalegder.mpesa.repository.FundLedgerRepository;
-import ke.co.chamaledger.chamalegder.notification.SmsService;
+import ke.co.chamaledger.chamalegder.notification.NotificationService;
 import ke.co.chamaledger.chamalegder.repository.ChamaMemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +31,8 @@ public class ReportService {
 
     private final FundLedgerRepository fundLedgerRepository;
     private final ChamaMemberRepository chamaMemberRepository;
-    private final GroqAiService groqAiService;           // ✅ Replaced GeminiAiService
-    private final SmsService smsService;
+    private final GeminiAiService geminiAiService;
+    private final NotificationService notificationService;
 
     public WeeklyChamaHealthReport generateWeeklyHealthReport() {
         LocalDateTime periodEnd = LocalDateTime.now();
@@ -59,7 +59,7 @@ public class ReportService {
                 .sorted(String.CASE_INSENSITIVE_ORDER)
                 .toList();
 
-        String executiveSummary = groqAiService.generateExecutiveSummary(  // ✅ Replaced Gemini call
+        String executiveSummary = geminiAiService.generateExecutiveSummary(
                 money(totalContributions),
                 money(currentBalance),
                 defaulters.size(),
@@ -91,7 +91,12 @@ public class ReportService {
         recipients.forEach(member -> {
             String phoneNumber = member.getUser().getPhoneNumber();
             log.info("Sending weekly Chama health report to {} ({})", memberName(member), phoneNumber);
-            smsService.sendSms(phoneNumber, message);
+            notificationService.sendNotification(
+                    member.getUser().getEmail(),
+                    memberName(member),
+                    "Weekly Chama Health Report",
+                    message
+            );
         });
     }
 

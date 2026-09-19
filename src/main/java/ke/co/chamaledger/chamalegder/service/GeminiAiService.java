@@ -16,24 +16,22 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GroqAiService {
+public class GeminiAiService {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
-    @Value("${app.groq.api-key}")
+    @Value("${app.gemini.api-key}")
     private String apiKey;
 
-    @Value("${app.groq.model:llama-3.1-8b-instant}")
-    private String model;
-
-    private static final String GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+    @Value("${app.gemini.model-url:https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent}")
+    private String modelUrl;
 
     // ─── Meeting Notes ────────────────────────────────────────────────────────
 
     public JsonNode analyzeMeetingNotes(String rawContent) {
         try {
-            String systemPrompt = """
+            String prompt = """
                 You are an expert assistant that processes WhatsApp Chama group meeting notes.
                 Extract and return **only** valid JSON with this exact structure:
 
@@ -48,23 +46,23 @@ public class GroqAiService {
                     }
                   ]
                 }
-                """;
 
-            Map<String, Object> requestBody = Map.of(
-                    "model", model,
-                    "temperature", 0.2,
-                    "max_tokens", 2048,
-                    "response_format", Map.of("type", "json_object"),
-                    "messages", List.of(
-                            Map.of("role", "system", "content", systemPrompt),
-                            Map.of("role", "user", "content", "Here is the raw WhatsApp chat:\n\n" + rawContent)
-                    )
-            );
+                Here is the raw WhatsApp chat:
 
-            return callGroqForJson(requestBody);
+                """ + rawContent;
+
+            String responseText = callGemini(prompt);
+
+            // Strip markdown code fences if present
+            String json = responseText.strip();
+            if (json.startsWith("```")) {
+                json = json.replaceAll("^```[a-zA-Z]*\\n?", "").replaceAll("```$", "").strip();
+            }
+
+            return objectMapper.readTree(json);
 
         } catch (Exception e) {
-            log.error("Error calling Groq API for meeting notes", e);
+            log.error("Error calling Gemini API for meeting notes", e);
             throw new RuntimeException("AI processing failed: " + e.getMessage(), e);
         }
     }
@@ -86,55 +84,46 @@ public class GroqAiService {
                 Be direct and professional. Do not use bullet points or headers.
                 """.formatted(totalContributions, currentBalance, defaulterCount, totalMembers);
 
-            Map<String, Object> requestBody = Map.of(
-                    "model", model,
-                    "temperature", 0.3,
-                    "max_tokens", 100,
-                    "messages", List.of(
-                            Map.of("role", "system", "content",
-                                    "You write short, clear financial summaries for Chama groups."),
-                            Map.of("role", "user", "content", prompt)
-                    )
-            );
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setBearerAuth(apiKey);
-
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-            ResponseEntity<String> response = restTemplate.postForEntity(GROQ_API_URL, entity, String.class);
-
-            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                JsonNode root = objectMapper.readTree(response.getBody());
-                return root.path("choices").get(0).path("message").path("content").asText("").trim();
-            }
-
-            log.warn("Groq returned non-200 for executive summary: {}", response.getStatusCode());
-            return fallbackSummary(totalContributions, currentBalance, defaulterCount, totalMembers);
+            String content = callGemini(prompt);
+            return content != null ? content.trim() : fallbackSummary(totalContributions, currentBalance, defaulterCount, totalMembers);
 
         } catch (Exception e) {
-            log.error("Error generating executive summary via Groq", e);
+            log.error("Error generating executive summary via Gemini", e);
             return fallbackSummary(totalContributions, currentBalance, defaulterCount, totalMembers);
         }
     }
 
     // ─── Shared helpers ───────────────────────────────────────────────────────
 
-    private JsonNode callGroqForJson(Map<String, Object> requestBody) throws Exception {
+    private String callGemini(String prompt) {
+        String url = modelUrl + "?key=" + apiKey;
+
+        Map<String, Object> requestBody = Map.of(
+                "contents", List.of(
+                        Map.of("parts", List.of(
+                                Map.of("text", prompt)
+                        ))
+                )
+        );
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(apiKey);
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-        ResponseEntity<String> response = restTemplate.postForEntity(GROQ_API_URL, entity, String.class);
+        ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
         if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-            JsonNode root = objectMapper.readTree(response.getBody());
-            String content = root.path("choices").get(0).path("message").path("content").asText();
-            return objectMapper.readTree(content);
+            try {
+                JsonNode root = objectMapper.readTree(response.getBody());
+                return root.path("candidates").get(0)
+                        .path("content").path("parts").get(0)
+                        .path("text").asText();
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to parse Gemini response: " + e.getMessage(), e);
+            }
         }
 
-        throw new RuntimeException("Groq API returned status: " + response.getStatusCode());
+        throw new RuntimeException("Gemini API returned status: " + response.getStatusCode());
     }
 
     private String fallbackSummary(BigDecimal contributions, BigDecimal balance,

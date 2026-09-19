@@ -10,7 +10,7 @@ import ke.co.chamaledger.chamalegder.entity.User;
 import ke.co.chamaledger.chamalegder.model.FundLedger;
 import ke.co.chamaledger.chamalegder.mpesa.repository.FundLedgerRepository;
 import ke.co.chamaledger.chamalegder.mpesa.service.LedgerService;
-import ke.co.chamaledger.chamalegder.notification.SmsService;
+import ke.co.chamaledger.chamalegder.notification.NotificationService;
 import ke.co.chamaledger.chamalegder.repository.ChamaMemberRepository;
 import ke.co.chamaledger.chamalegder.repository.LoanRepository;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +41,7 @@ public class LoanService {
     private final LoanRepository loanRepository;
     private final ChamaMemberRepository chamaMemberRepository;
     private final LedgerService ledgerService;
-    private final SmsService smsService;
+    private final NotificationService notificationService;
     private final FundLedgerRepository fundLedgerRepository;
 
     public int calculateTrustScore(String phone) {
@@ -220,7 +220,12 @@ public class LoanService {
         };
 
         if (message != null) {
-            smsService.sendSms(loan.getBorrower().getPhoneNumber(), message);
+            notificationService.sendNotification(
+                    loan.getBorrower().getEmail(),
+                    loan.getBorrower().getFullName(),
+                    "Loan Update - " + loan.getLoanNumber(),
+                    message
+            );
         }
     }
 

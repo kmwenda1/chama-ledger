@@ -19,7 +19,7 @@ public class MeetingService {
 
     private final MeetingRepository meetingRepository;
     private final ChamaMemberRepository chamaMemberRepository;
-    private final GroqAiService groqAiService;          // ← Using Groq now
+    private final GeminiAiService geminiAiService;
 
     @Transactional
     public MeetingResponse uploadMeetingNotes(String phone, MeetingUploadRequest request) {
@@ -27,8 +27,7 @@ public class MeetingService {
             throw new RuntimeException("You must be an active chama member to process meeting notes");
         }
 
-        // Process with Groq
-        JsonNode processedNotes = groqAiService.analyzeMeetingNotes(request.getRawContent());
+        JsonNode processedNotes = geminiAiService.analyzeMeetingNotes(request.getRawContent());
 
         Meeting meeting = Meeting.builder()
                 .title(request.getTitle())

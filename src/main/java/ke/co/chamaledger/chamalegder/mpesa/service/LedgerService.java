@@ -7,7 +7,7 @@ import ke.co.chamaledger.chamalegder.mpesa.model.MpesaTransaction;
 import ke.co.chamaledger.chamalegder.mpesa.repository.FundLedgerRepository;
 import ke.co.chamaledger.chamalegder.repository.ChamaMemberRepository;
 import ke.co.chamaledger.chamalegder.entity.ChamaMember;
-import ke.co.chamaledger.chamalegder.notification.SmsService;
+import ke.co.chamaledger.chamalegder.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,7 +27,7 @@ public class LedgerService {
 
     private final FundLedgerRepository ledgerRepository;
     private final ChamaMemberRepository chamaMemberRepository;
-    private final SmsService smsService;
+    private final NotificationService notificationService;
 
     @Transactional
     public void recordContribution(MpesaTransaction tx) {
@@ -73,8 +73,12 @@ public class LedgerService {
                 referenceId
         );
 
-        System.out.println("[SMS DEBUG] Attempting to send SMS to: " + phone);
-        smsService.sendSms(phone, message);
+        findMemberNameByPhone(phone).ifPresent(member -> {
+            String email = member.getUser().getEmail();
+            if (email != null && !email.isBlank()) {
+                notificationService.sendNotification(email, member.getUser().getFullName(), "Contribution Received", message);
+            }
+        });
     }
 
     private boolean hasExistingContribution(MpesaTransaction tx) {

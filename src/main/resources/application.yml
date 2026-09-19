@@ -30,15 +30,12 @@ jwt:
 
 # Third Party
 app:
-  africas-talking:
-    api-key: ${AT_API_KEY}
-    username: ${AT_USERNAME:sandbox}
+  brevo:
+    api-key: ${BREVO_API_KEY}
 
-  groq:
-    api-key: ${GROQ_API_KEY}
-    model: llama-3.1-8b-instant
-    temperature: 0.2
-    max-tokens: 2048
+  gemini:
+    api-key: ${GEMINI_API_KEY}
+    model-url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
 
 # M-Pesa
 mpesa:
