@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: chamaledger-api
+    env: docker
+    region: oregon
+    plan: free
+    healthCheckPath: /api/v1/health/ping
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: chamaledger-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: chamaledger-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: chamaledger-db
+          property: password
+      - key: JWT_SECRET
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: MPESA_CONSUMER_KEY
+        sync: false
+      - key: MPESA_CONSUMER_SECRET
+        sync: false
+      - key: MPESA_CALLBACK_URL
+        sync: false
+
+databases:
+  - name: chamaledger-db
+    databaseName: chamaledger_db
+    user: postgres
+    plan: free
+    region: oregon
