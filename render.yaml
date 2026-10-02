@@ -8,10 +8,18 @@ services:
     envVars:
       - key: PORT
         value: 8080
-      - key: SPRING_DATASOURCE_URL
+      - key: DB_HOST
         fromDatabase:
           name: chamaledger-db
-          property: connectionString
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: chamaledger-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: chamaledger-db
+          property: database
       - key: SPRING_DATASOURCE_USERNAME
         fromDatabase:
           name: chamaledger-db
