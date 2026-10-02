@@ -20,11 +20,11 @@ services:
         fromDatabase:
           name: chamaledger-db
           property: database
-      - key: SPRING_DATASOURCE_USERNAME
+      - key: DB_USER
         fromDatabase:
           name: chamaledger-db
           property: user
-      - key: SPRING_DATASOURCE_PASSWORD
+      - key: DB_PASSWORD
         fromDatabase:
           name: chamaledger-db
           property: password
