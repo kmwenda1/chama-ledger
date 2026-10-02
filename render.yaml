@@ -35,7 +35,5 @@ services:
 
 databases:
   - name: chamaledger-db
-    databaseName: chamaledger_db
-    user: postgres
     plan: free
     region: oregon
